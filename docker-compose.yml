@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  restaurant_bi:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"  # API
+      - "5233:5233"  # Restack UI
+    environment:
+      - ENVIRONMENT=development
+      - RESTACK_API_KEY=${RESTACK_API_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+      - mlflow
+      - postgres
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_TRACKING_URI=postgresql://postgres:postgres@postgres:5432/mlflow
+    depends_on:
+      - postgres
+    command: mlflow server --host 0.0.0.0
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mlflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - RESTACK_API_KEY=${RESTACK_API_KEY}
+    volumes:
+      - ./:/app
+    depends_on:
+      - restaurant_bi
+
+  airflow:
+    image: apache/airflow:2.7.1
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: webserver
+
+volumes:
+  redis_data:
+  postgres_data:
+  airflow_logs:

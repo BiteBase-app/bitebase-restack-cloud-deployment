@@ -1,5 +1,5 @@
 # Core dependencies
-restack-ai>=0.1.0
+restack-ai>=0.0.62
 fastapi>=0.68.0
 uvicorn>=0.15.0
 python-dotenv>=0.19.0
@@ -16,7 +16,7 @@ sentence-transformers>=2.2.0
 
 # Graph Database
 neo4j>=4.4.0
-graphrag-client>=1.0.0
+graphrag
 
 # Caching and Storage
 redis>=4.0.0

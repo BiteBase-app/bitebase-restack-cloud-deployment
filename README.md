@@ -2,34 +2,33 @@
 
 A comprehensive Business Intelligence (BI) system for the restaurant industry, built with Restack AI and following SPEC-001 architecture.
 
+## System Architecture
+
+The system integrates multiple components for robust data processing and analysis:
+
+- Vector Database (Weaviate) for semantic search and data embeddings
+- Graph Database (Neo4j) for relationship analysis
+- GraphRAG for enhanced data retrieval and analysis
+- Redis for caching and real-time data processing
+- Restack for AI workflow management
+
 ## Project Structure
 
 ```
 .
-├── dags/                      # Airflow DAG definitions
-│   └── scheduler.py
 ├── docker/                    # Docker configurations
-│   ├── Dockerfile
-│   └── Dockerfile.streamlit
-├── docs/                      # Documentation
-│   └── SPEC-001.asciidoc
+│   ├── Dockerfile            # Main application Dockerfile
+│   └── Dockerfile.streamlit  # Dashboard Dockerfile
+├── docs/                     # Documentation
+│   └── SPEC-001.asciidoc    # System specifications
 ├── src/
 │   └── restaurant_bi/
-│       ├── api/              # API endpoints
-│       │   └── api_endpoints.py
-│       ├── core/             # Core system components
-│       │   ├── data_pipeline.py
-│       │   ├── mlops_infrastructure.py
-│       │   ├── restack_workflow.py
-│       │   └── services.py
-│       ├── dashboard/        # Streamlit dashboard
-│       │   └── bi_dashboard.py
-│       ├── functions/        # Business logic
-│       │   └── functions.py
-│       ├── monitoring/       # System monitoring
-│       │   └── monitoring.py
-│       └── workflows/        # Workflow definitions
-│           └── workflows.py
+│       ├── api/             # API endpoints
+│       ├── core/            # Core system components
+│       ├── dashboard/       # Streamlit dashboard
+│       ├── functions/       # Business logic
+│       ├── monitoring/      # System monitoring
+│       └── workflows/       # Workflow definitions
 ├── docker-compose.yml
 └── requirements.txt
 ```
@@ -37,9 +36,9 @@ A comprehensive Business Intelligence (BI) system for the restaurant industry, b
 ## Features
 
 - Real-time data collection and analysis
-- Market trend analysis and competitor tracking
-- Customer sentiment analysis
-- Menu optimization
+- Semantic search capabilities via Weaviate
+- Relationship-based analytics using Neo4j
+- Enhanced data retrieval with GraphRAG
 - Business intelligence dashboards
 - MLOps infrastructure with monitoring
 - Automated reporting and insights
@@ -48,9 +47,9 @@ A comprehensive Business Intelligence (BI) system for the restaurant industry, b
 
 - Docker and Docker Compose
 - Restack AI account and API key
-- Python 3.11+
+- At least 16GB RAM for running all services
 
-## Setup
+## Environment Setup
 
 1. Clone the repository:
 ```bash
@@ -61,7 +60,7 @@ cd restaurant-bi-system
 2. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your Restack API key and other configurations
+# Edit .env and add your Restack API key
 ```
 
 3. Start the services:
@@ -69,13 +68,19 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-## Accessing Services
+## Available Services
 
-- Restack Developer UI: http://localhost:5233
-- API Documentation: http://localhost:8000/docs
-- Business Intelligence Dashboard: http://localhost:8501
-- MLflow UI: http://localhost:5000
-- Airflow UI: http://localhost:8080
+- Main Application: http://localhost:8000
+  - API Documentation: http://localhost:8000/docs
+  - Restack Developer UI: http://localhost:5233
+
+- Databases:
+  - Vector DB (Weaviate): http://localhost:8080
+  - Graph DB (Neo4j): http://localhost:7474
+  - GraphRAG: http://localhost:5000
+
+- Visualization:
+  - Business Intelligence Dashboard: http://localhost:8501
 
 ## Development
 
@@ -93,6 +98,28 @@ pytest
 ```bash
 black src/
 ```
+
+## System Components
+
+### Vector Database (Weaviate)
+- Handles semantic search capabilities
+- Stores embeddings for efficient similarity search
+- Enables complex data queries
+
+### Graph Database (Neo4j)
+- Manages relationship data
+- Enables complex pattern matching
+- Supports business relationship analysis
+
+### GraphRAG
+- Enhances data retrieval
+- Combines graph-based and vector-based search
+- Improves analytics accuracy
+
+### Redis
+- Handles caching
+- Supports real-time data processing
+- Manages session data
 
 ## Contributing
 

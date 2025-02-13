@@ -1,18 +1,234 @@
-name: Docker Image CI
+version: '3.8'
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+services:
+  # Backend API
+  backend:
+    image: ghcr.io/bitebase/bi-backend:latest
+    build: ./src/restaurant_bi
+    container_name: bi-backend-api
+    restart: always
+    depends_on:
+      - db
+      - redis
+      - vector-db
+      - datalake
+      - ai-agent
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/bitebase
+      - VECTOR_DB_URL=postgresql://user:password@vector-db:5432/vectorstore
+      - AI_AGENT_URL=http://ai-agent:8501
+      - RESTACK_CLOUD=true
+      - RESTACK_API_KEY=${RESTACK_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
 
-jobs:
+  # AI Agent Service
+  ai-agent:
+    image: ghcr.io/bitebase/bi-agent:latest
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: bi-agent
+    restart: always
+    depends_on:
+      - vector-db
+      - datalake
+    environment:
+      - MODEL_PATH=/models/llm-model
+      - DATA_SOURCE_URL=http://vector-db:5433
+      - RESTACK_API_KEY=${RESTACK_API_KEY}
+    ports:
+      - "8501:8501"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "4G"
 
-  build:
+  # Frontend Dashboard
+  frontend:
+    image: ghcr.io/bitebase/bi-dashboard:latest
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.streamlit
+    container_name: bi-frontend-app
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
 
-    runs-on: ubuntu-latest
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: bi-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bitebase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
 
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+  # Vector Database
+  vector-db:
+    image: ankane/pgvector:latest
+    container_name: bi-vector-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vectorstore
+    volumes:
+      - vector_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
+
+  # Redis Cache
+  redis:
+    image: redis:latest
+    container_name: bi-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  # API Gateway
+  apisix:
+    image: apache/apisix:latest
+    container_name: bi-apisix
+    restart: always
+    ports:
+      - "9080:9080"
+      - "9443:9443"
+    volumes:
+      - ./config/apisix:/usr/local/apisix/conf
+    depends_on:
+      - backend
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+  # Workflow Scheduler
+  airflow:
+    image: apache/airflow:latest
+    container_name: bi-airflow
+    restart: always
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    networks:
+      - bitebase-network
+    depends_on:
+      - datalake
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
+
+  # Data Lake
+  datalake:
+    image: minio/minio:latest
+    container_name: bi-datalake
+    restart: always
+    environment:
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    volumes:
+      - datalake_storage:/data
+    ports:
+      - "9000:9000"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bi-prometheus
+    restart: always
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+  # Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bi-grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    networks:
+      - bitebase-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+networks:
+  bitebase-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  vector_data:
+  datalake_storage:

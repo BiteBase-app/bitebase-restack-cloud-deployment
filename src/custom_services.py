@@ -1,29 +1,34 @@
-import os
-import webbrowser
 import asyncio
+import os
 from watchfiles import run_process
+import webbrowser
 from restack_ai import Restack
-from src.functions import my_custom_function, another_custom_function, lookup_sales, llm_chat
-from src.agents import Agent1, Agent2, AgentRag
+from functions.my_custom_function import my_custom_function
+from functions.another_custom_function import another_custom_function
+from src.functions.lookup_sales import lookupSales
+from src.functions.llm_chat import llm_chat
+from src.agents.agent_1 import agent_1
+from src.agents.agent_2 import agent_2
+from src.agents.chat_rag import AgentRag
 
 client = Restack()
 
 async def custom_service_1():
     await client.start_service(
-        agents=[Agent1],
+        agents=[agent_1],
         functions=[my_custom_function],
         task_queue="queue_1"
     )
 
 async def custom_service_2():
     await client.start_service(
-        agents=[Agent2],
+        agents=[agent_2],
         functions=[another_custom_function],
         task_queue="queue_2"
     )
 
 async def main():
-    await client.start_service(agents=[AgentRag], functions=[lookup_sales, llm_chat])
+    await client.start_service(agents=[AgentRag], functions=[lookupSales, llm_chat])
 
 async def run_services():
     await asyncio.gather(custom_service_1(), custom_service_2(), main())

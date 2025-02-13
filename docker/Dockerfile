@@ -25,4 +25,4 @@ ENV RESTACK_PORT=5233
 EXPOSE 8000 5233
 
 # Run the service
-CMD ["python", "src/restaurant_bi/core/services.py"]
+CMD ["python", "apps/backend/services.py"]

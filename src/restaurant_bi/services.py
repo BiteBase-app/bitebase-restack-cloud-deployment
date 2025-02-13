@@ -3,8 +3,8 @@ import webbrowser
 import asyncio
 from watchfiles import run_process
 from restack_ai import Restack
-from src.functions import my_custom_function, another_custom_function, lookup_sales, llm_chat
-from src.agents import Agent1, Agent2, AgentRag
+from src.restaurant_bi.functions import my_custom_function, another_custom_function, lookupSales, llm_chat
+from src.restaurant_bi.agents import Agent1, Agent2, AgentRag
 
 client = Restack()
 
@@ -23,7 +23,7 @@ async def custom_service_2():
     )
 
 async def main():
-    await client.start_service(agents=[AgentRag], functions=[lookup_sales, llm_chat])
+    await client.start_service(agents=[AgentRag], functions=[lookupSales, llm_chat])
 
 async def run_services():
     await asyncio.gather(custom_service_1(), custom_service_2(), main())

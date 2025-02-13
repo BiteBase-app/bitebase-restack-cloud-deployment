@@ -16,19 +16,29 @@ The system integrates multiple components for robust data processing and analysi
 
 ```
 .
-├── docker/                    # Docker configurations
+├── apps/                     # Application source code
+│   ├── backend/              # Backend application
+│   │   ├── api/              # API endpoints
+│   │   ├── core/             # Core system components
+│   │   ├── functions.py      # Business logic
+│   │   ├── monitoring/       # System monitoring
+│   │   ├── workflows.py      # Workflow definitions
+│   │   ├── agents.py         # Agent definitions
+│   │   └── services.py       # Service management script
+│   └── frontend/             # Frontend application
+│       ├── src/              # Frontend source code
+│       ├── public/           # Public assets
+│       ├── pages/            # Next.js pages
+│       ├── components/       # UI components
+│       ├── styles/           # CSS styles
+│       └── ...               # Other frontend files
+├── docker/                   # Docker configurations
 │   ├── Dockerfile            # Main application Dockerfile
 │   └── Dockerfile.streamlit  # Dashboard Dockerfile
 ├── docs/                     # Documentation
-│   └── SPEC-001.asciidoc    # System specifications
-├── src/
-│   └── restaurant_bi/
-│       ├── api/             # API endpoints
-│       ├── core/            # Core system components
-│       ├── dashboard/       # Streamlit dashboard
-│       ├── functions/       # Business logic
-│       ├── monitoring/      # System monitoring
-│       └── workflows/       # Workflow definitions
+│   └── SPEC-001.asciidoc     # System specifications
+├── dags/                     # Airflow DAGs
+│   └── scheduler.py          # Scheduler script
 ├── docker-compose.yml
 └── requirements.txt
 ```

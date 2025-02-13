@@ -15,8 +15,7 @@ weaviate-client>=3.0.0
 sentence-transformers>=2.2.0
 
 # Graph Database
-neo4j>=4.4.0
-graphrag
+neo4j-graphrag==1.4.3
 
 # Caching and Storage
 redis>=4.0.0

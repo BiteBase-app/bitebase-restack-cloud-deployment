@@ -26,11 +26,8 @@ COPY . .
 ENV PYTHONPATH=/app
 ENV RESTACK_PORT=5233
 
-# Expose ports for API and Restack UI
-EXPOSE 8000 5233
+# Expose ports for AI agent
+EXPOSE 8501
 
-# Install the application in editable mode
-RUN pip install -e .
-
-# Run the service
-CMD ["python", "-c", "from src.services import watch_services; watch_services()"]
+# Run the AI agent service
+CMD ["python", "apps/backend/ai_agent.py"]

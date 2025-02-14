@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   # Backend API
   backend:
     build:
-      context: .
+      context: apps/backend
       dockerfile: docker/Dockerfile
     container_name: bi-backend-api
     restart: always
@@ -42,7 +40,7 @@ services:
   ai-agent:
     build: 
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.ai-agent
     container_name: bi-agent
     restart: always
     depends_on:
@@ -65,7 +63,7 @@ services:
   # Frontend Dashboard
   frontend:
     build: 
-      context: .
+      context: apps/frontend
       dockerfile: docker/Dockerfile.streamlit
     container_name: bi-frontend-app
     restart: always

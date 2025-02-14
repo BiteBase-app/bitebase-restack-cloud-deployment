@@ -7,14 +7,18 @@ from typing import Optional
 
 # Database connections
 def get_db_engine():
-    return create_engine(os.getenv('DATABASE_URL'))
+    """Get the database engine."""
+    db_url = "postgresql://user:password@db:5432/bitebase"
+    return create_engine(db_url)
 
 def get_vector_db_engine():
     return create_engine(os.getenv('VECTOR_DB_URL'))
 
 # Redis connection
 def get_redis_client():
-    return redis.from_url(os.getenv('REDIS_URL', 'redis://redis:6379'))
+    """Get the Redis client."""
+    redis_url = "redis://redis:6379"
+    return redis.StrictRedis.from_url(redis_url)
 
 # MinIO connection
 def get_minio_client():
@@ -33,9 +37,11 @@ async def get_airflow_client():
 
 # AI Agent connection
 async def get_ai_agent_client(session: Optional[aiohttp.ClientSession] = None):
+    """Get the AI agent client."""
     if not session:
         session = aiohttp.ClientSession()
-    return session, os.getenv('AI_AGENT_URL', 'http://ai-agent:8501')
+    ai_agent_url = "http://ai-agent:8501"
+    return session, ai_agent_url
 
 # Prometheus metrics
 async def get_prometheus_client(session: Optional[aiohttp.ClientSession] = None):

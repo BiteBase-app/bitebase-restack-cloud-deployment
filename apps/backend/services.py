@@ -1,10 +1,10 @@
-import os
-import webbrowser
 import asyncio
+import os
 from watchfiles import run_process
+import webbrowser
 from restack_ai import Restack
-from src.functions import my_custom_function, another_custom_function, lookup_sales, llm_chat
-from src.agents import Agent1, Agent2, AgentRag
+from apps.backend.functions import my_custom_function, another_custom_function, lookup_sales, llm_chat
+from apps.backend.agents import Agent1, Agent2, AgentRag
 
 client = Restack()
 

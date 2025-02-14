@@ -3,8 +3,9 @@ version: '3.8'
 services:
   # Backend API
   backend:
-    image: ghcr.io/bitebase/bi-backend:latest
-    build: ./apps/backend
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     container_name: bi-backend-api
     restart: always
     depends_on:
@@ -14,24 +15,31 @@ services:
       - datalake
       - ai-agent
     environment:
-      - DATABASE_URL=postgresql://database_admin:Data1234!@db:5432/bitebase
-      - VECTOR_DB_URL=postgresql://database_admin:Data1234!@vector-db:5432/vectorstore
+      - DATABASE_URL=postgresql://user:password@db:5432/bitebase
+      - VECTOR_DB_URL=postgresql://user:password@vector-db:5432/vectorstore
       - AI_AGENT_URL=http://ai-agent:8501
       - RESTACK_CLOUD=true
       - RESTACK_API_KEY=${RESTACK_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATALAKE_URL=http://datalake:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - AIRFLOW_URL=http://airflow:8080
+      - PROMETHEUS_URL=http://prometheus:9090
     ports:
       - "8000:8000"
+    volumes:
+      - model_cache:/app/model_cache
     networks:
       - bitebase-network
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: "512M"
+          cpus: "2.0"
+          memory: "2G"
 
   # AI Agent Service
   ai-agent:
-    image: ghcr.io/bitebase/bi-agent:latest
     build: 
       context: .
       dockerfile: docker/Dockerfile
@@ -56,7 +64,6 @@ services:
 
   # Frontend Dashboard
   frontend:
-    image: ghcr.io/bitebase/bi-dashboard:latest
     build: 
       context: .
       dockerfile: docker/Dockerfile.streamlit
@@ -65,7 +72,15 @@ services:
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - BACKEND_API_URL=http://backend:8000
+      - AI_AGENT_URL=http://ai-agent:8501
+      - VECTOR_DB_URL=postgresql://user:password@vector-db:5432/vectorstore
+      - DATALAKE_URL=http://datalake:9000
+      - REDIS_URL=redis://redis:6379
     networks:
       - bitebase-network
     deploy:
@@ -232,3 +247,4 @@ volumes:
   postgres_data:
   vector_data:
   datalake_storage:
+  model_cache:

@@ -1,12 +1,12 @@
 from restack_ai.workflow import workflow, import_functions, child_start, child_execute, workflow_info, continue_as_new, log
 from datetime import timedelta
 from pydantic import BaseModel
-from src.functions.hn.schema import HnSearchInput
+from apps.backend.functions.hn.schema import HnSearchInput
 
 with import_functions():
-    from src.functions.openai.chat import openai_todos, FunctionInputParams
-    from src.functions.hn.search import tool_hn_search
-    from src.workflows.child_workflow import my_child_workflow
+    from apps.backend.functions.openai.chat import openai_todos, FunctionInputParams
+    from apps.backend.functions.hn.search import tool_hn_search
+    from apps.backend.workflows.child_workflow import my_child_workflow
 
 @dataclass
 class WorkflowInputParams(BaseModel):

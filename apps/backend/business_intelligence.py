@@ -1,5 +1,4 @@
-import asyncio
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime
 import pandas as pd
 from sklearn.cluster import KMeans
@@ -144,7 +143,7 @@ def calculate_capacity(data: Dict[str, Any]) -> float:
     """Calculate current capacity utilization"""
     pass
 
-def check_inventory_levels(data: Dict[str, Any]) -> Dict[str, float]:
+def check_inventory_levels(data: Dict[str, float]) -> Dict[str, float]:
     """Check current inventory levels"""
     pass
 

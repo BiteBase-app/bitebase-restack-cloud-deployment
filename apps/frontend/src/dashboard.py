@@ -4,8 +4,10 @@ import pandas as pd
 import plotly.graph_objects as go
 from jinja2 import Template
 import streamlit as st
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+import aiohttp
+import asyncio
+import json
+from . import config
 
 class ExecutiveDashboard:
     def __init__(self):
@@ -239,37 +241,91 @@ class IntegrationPoints:
         # Implement marketing suggestions
         pass
 
+async def fetch_metrics(session: aiohttp.ClientSession, endpoint: str) -> Dict[str, Any]:
+    """Fetch metrics from backend API"""
+    try:
+        async with session.get(f"{config.BACKEND_API_URL}/{endpoint}") as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                st.error(f"Error fetching {endpoint}: {response.status}")
+                return {}
+    except Exception as e:
+        st.error(f"Failed to fetch {endpoint}: {str(e)}")
+        return {}
+
+async def fetch_recommendations(session: aiohttp.ClientSession) -> List[str]:
+    """Fetch AI-generated recommendations"""
+    try:
+        async with session.get(f"{config.AI_AGENT_URL}/recommendations") as response:
+            if response.status == 200:
+                data = await response.json()
+                return data.get('recommendations', [])
+            else:
+                st.error(f"Error fetching recommendations: {response.status}")
+                return []
+    except Exception as e:
+        st.error(f"Failed to fetch recommendations: {str(e)}")
+        return []
+
 def create_streamlit_dashboard():
     """Create Streamlit dashboard"""
     st.title("Restaurant BI Dashboard")
     
-    # Sidebar
+    # Sidebar with error handling for date input
     st.sidebar.title("Controls")
-    date_range = st.sidebar.date_input("Select Date Range", [])
+    try:
+        date_range = st.sidebar.date_input("Select Date Range", [])
+    except Exception as e:
+        st.sidebar.error(f"Error with date input: {str(e)}")
+        date_range = []
     
-    # Executive metrics
-    st.header("Executive Metrics")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Revenue", "$10,000", "+5%")
-    with col2:
-        st.metric("Customer Satisfaction", "4.5/5", "+0.2")
-    with col3:
-        st.metric("Market Share", "15%", "+2%")
-    
-    # Operational metrics
-    st.header("Operational Metrics")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Order Processing Time", "12 min", "-2 min")
-    with col2:
-        st.metric("Inventory Level", "85%", "+5%")
-    
-    # Recommendations
-    st.header("Recommendations")
-    st.write("1. Optimize menu pricing during peak hours")
-    st.write("2. Restock inventory for high-demand items")
-    st.write("3. Launch targeted marketing campaign")
+    # Create async session and fetch data
+    async def fetch_dashboard_data():
+        async with aiohttp.ClientSession() as session:
+            # Fetch metrics concurrently
+            exec_metrics, op_metrics, recommendations = await asyncio.gather(
+                fetch_metrics(session, "executive_metrics"),
+                fetch_metrics(session, "operational_metrics"),
+                fetch_recommendations(session)
+            )
+            
+            # Executive metrics with error handling
+            st.header("Executive Metrics")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                revenue = exec_metrics.get('revenue', {'value': 0, 'change': '0%'})
+                st.metric("Revenue", f"${revenue['value']:,.2f}", revenue['change'])
+            with col2:
+                satisfaction = exec_metrics.get('satisfaction', {'value': 0, 'change': '0'})
+                st.metric("Customer Satisfaction", f"{satisfaction['value']}/5", satisfaction['change'])
+            with col3:
+                market = exec_metrics.get('market_share', {'value': 0, 'change': '0%'})
+                st.metric("Market Share", f"{market['value']}%", market['change'])
+            
+            # Operational metrics with error handling
+            st.header("Operational Metrics")
+            col1, col2 = st.columns(2)
+            with col1:
+                proc_time = op_metrics.get('processing_time', {'value': 0, 'change': '0'})
+                st.metric("Order Processing Time", f"{proc_time['value']} min", proc_time['change'])
+            with col2:
+                inventory = op_metrics.get('inventory', {'value': 0, 'change': '0%'})
+                st.metric("Inventory Level", f"{inventory['value']}%", inventory['change'])
+            
+            # AI-generated recommendations
+            st.header("Recommendations")
+            if recommendations:
+                for i, rec in enumerate(recommendations, 1):
+                    st.write(f"{i}. {rec}")
+            else:
+                st.info("No recommendations available at the moment")
+
+    # Run async data fetching
+    try:
+        asyncio.run(fetch_dashboard_data())
+    except Exception as e:
+        st.error(f"Failed to load dashboard data: {str(e)}")
 
 if __name__ == "__main__":
     create_streamlit_dashboard()

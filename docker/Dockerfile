@@ -6,6 +6,11 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
+    gcc \
+    g++ \
+    cmake \
+    make \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file

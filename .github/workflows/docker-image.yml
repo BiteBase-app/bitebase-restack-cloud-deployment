@@ -5,7 +5,7 @@ services:
   backend:
     build:
       context: apps/backend
-      dockerfile: docker/Dockerfile
+      dockerfile: apps/backend/Dockerfile
     container_name: bi-backend-api
     restart: always
     depends_on:
